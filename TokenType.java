@@ -6,5 +6,13 @@ public enum TokenType {
     ASSIGN,     // রাখ
     IDENTIFIER, // নাম
     SEMICOLON,  // ;
-    EOF
+    IF,         // যদি
+    ELSE,       // নাহলে
+    THEN,       // তাহলে
+    GT,         // >
+    LT,         // <
+    EQ,         // ==
+    LEFT_PAREN, // (
+    RIGHT_PAREN,// )
+    EOF;
 }

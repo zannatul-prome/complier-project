@@ -19,17 +19,41 @@ public class Parser {
         pos++;
     }
     
+    boolean parseCondition() {
+        int left = parseExpression();
+        boolean result = false;
+        
+        if (current().type == TokenType.GT) {
+            advance();
+            int right = parseExpression();
+            result = (left > right);
+        }
+        else if (current().type == TokenType.LT) {
+            advance();
+            int right = parseExpression();
+            result = (left < right);
+        }
+        else if (current().type == TokenType.EQ) {
+            advance();
+            int right = parseExpression();
+            result = (left == right);
+        }
+        
+        return result;
+    }
+    
     int parseExpression() {
         int result = parseTerm();
         
         while (current().type == TokenType.PLUS || current().type == TokenType.MINUS) {
-            Token op = current();
-            advance();
-            int right = parseTerm();
-            
-            if (op.type == TokenType.PLUS) {
+            if (current().type == TokenType.PLUS) {
+                advance();
+                int right = parseTerm();
                 result = result + right;
-            } else {
+            }
+            else if (current().type == TokenType.MINUS) {
+                advance();
+                int right = parseTerm();
                 result = result - right;
             }
         }
@@ -54,21 +78,7 @@ public class Parser {
         
         if (token.type == TokenType.NUMBER) {
             advance();
-            // Convert Bengali number to integer
-            String englishNum = "";
-            for (char c : token.value.toCharArray()) {
-                if (c == '০') englishNum += "0";
-                else if (c == '১') englishNum += "1";
-                else if (c == '২') englishNum += "2";
-                else if (c == '৩') englishNum += "3";
-                else if (c == '৪') englishNum += "4";
-                else if (c == '৫') englishNum += "5";
-                else if (c == '৬') englishNum += "6";
-                else if (c == '৭') englishNum += "7";
-                else if (c == '৮') englishNum += "8";
-                else if (c == '৯') englishNum += "9";
-            }
-            return Integer.parseInt(englishNum);
+            return Integer.parseInt(token.value);
         }
         else if (token.type == TokenType.IDENTIFIER) {
             advance();
@@ -77,6 +87,14 @@ public class Parser {
                 return 0;
             }
             return variables.get(varName);
+        }
+        else if (token.type == TokenType.LEFT_PAREN) {
+            advance();
+            int result = parseExpression();
+            if (current().type == TokenType.RIGHT_PAREN) {
+                advance();
+            }
+            return result;
         }
         
         return 0;
@@ -105,10 +123,69 @@ public class Parser {
         System.out.println("========");
         
         while (current().type != TokenType.EOF) {
-            parseStatement();
+            if (current().type == TokenType.IF) {
+                parseIfElse();
+            } 
+            else {
+                parseStatement();
+            }
         }
         
         System.out.println("\n✔ প্রোগ্রাম সঠিক!");
+    }
+    
+    void parseIfElse() {
+        advance(); // skip 'যদি'
+        
+        if (current().type == TokenType.LEFT_PAREN) {
+            advance();
+            boolean condition = parseCondition();
+            
+            if (current().type == TokenType.RIGHT_PAREN) {
+                advance();
+            }
+            
+            if (current().type == TokenType.THEN) {
+                advance();
+            }
+            
+            if (condition) {
+                System.out.println("শর্ত সত্য → IF ব্লক চলবে");
+                
+                while (current().type != TokenType.ELSE && 
+                       current().type != TokenType.EOF) {
+                    if (current().type == TokenType.IDENTIFIER) {
+                        parseStatement();
+                    } else {
+                        break;
+                    }
+                }
+            }
+            else {
+                System.out.println("শর্ত মিথ্যা → ELSE ব্লক চলবে");
+                
+                while (current().type != TokenType.ELSE && 
+                       current().type != TokenType.EOF) {
+                    advance();
+                }
+                
+                if (current().type == TokenType.ELSE) {
+                    advance();
+                    
+                    while (current().type != TokenType.EOF) {
+                        if (current().type == TokenType.IDENTIFIER) {
+                            parseStatement();
+                        } else {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (current().type == TokenType.SEMICOLON) {
+            advance();
+        }
     }
     
     void parseStatement() {
