@@ -1,6 +1,8 @@
 import java.util.*;
 
 public class SymbolTable {
+    // updated for compiler project
+
     private HashMap<String, Object> symbols = new HashMap<>();
     private HashMap<String, String> types = new HashMap<>();
     
@@ -38,7 +40,6 @@ public class SymbolTable {
     }
     
     public static void display() {
-        // This method is called from your Main class
         System.out.println("Symbol table displayed");
     }
 }
