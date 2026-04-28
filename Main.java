@@ -1,34 +1,26 @@
-// ===============================
-// File: Main.java
-// ===============================
-
 import java.util.*;
 
 public class Main {
-
     public static void main(String[] args) {
-
-        String sourceCode =
-                "সংখ্যা অ; " +
-                "সংখ্যা ক; " +
-                "দশমিক গড়; " +
-
-                "অ = ৫; " +
-                "ক = অ + ৫ * ( ৩ - ১ ); " +
-                "গড় = ৩.৫; ";
-
-        List<Token> tokens = Lexer.tokenize(sourceCode);
-
-        System.out.println("========== TOKENS ==========");
-
-        for (Token token : tokens) {
-            System.out.println(token);
+        // বাংলায় প্রোগ্রাম লিখি
+        String code = "ক = ৫;\n" +
+                      "খ = ক + ৩;\n" +
+                      "গ = খ * ২;\n";
+        
+        System.out.println("বাংলা প্রোগ্রাম:");
+        System.out.println(code);
+        System.out.println("==================");
+        
+        Lexer lexer = new Lexer(code);
+        List<Token> tokens = lexer.tokenize();
+        
+        System.out.println("টোকেন:");
+        for (Token t : tokens) {
+            System.out.println(t);
         }
-
-        System.out.println();
-
-        Parser.parse(tokens);
-
-        SymbolTable.display();
+        
+        System.out.println("\nফলাফল:");
+        Parser parser = new Parser(tokens);
+        parser.parse();
     }
 }

@@ -1,183 +1,133 @@
 import java.util.*;
 
 public class Parser {
-
-    static List<Token> tokens;
-    static int current = 0;
-
-    public static void parse(List<Token> tokenList) {
-        tokens = tokenList;
-        current = 0;
-
-        while (current < tokens.size()) {
-            statement();
-        }
+    List<Token> tokens;
+    int pos;
+    Map<String, Integer> variables;
+    
+    Parser(List<Token> tokens) {
+        this.tokens = tokens;
+        this.pos = 0;
+        this.variables = new HashMap<>();
     }
-
-    // statement → declaration | assignment
-    static void statement() {
-
-        if (match("TYPE")) {
-            declaration();
-        }
-
-        else if (check("IDENTIFIER")) {
-            assignment();
-        }
-
-        else {
-            System.out.println("Syntax Error near -> " + peek().value);
-            current++;
-        }
+    
+    Token current() {
+        return tokens.get(pos);
     }
-
-    // declaration → TYPE ID ;
-    static void declaration() {
-
-        String declaredType = previous().value;
-
-        if (match("IDENTIFIER")) {
-            String varName = previous().value;
-
-            if (match("SEMICOLON")) {
-                SymbolTable.insert(varName, declaredType);
+    
+    void advance() {
+        pos++;
+    }
+    
+    int parseExpression() {
+        int result = parseTerm();
+        
+        while (current().type == TokenType.PLUS || current().type == TokenType.MINUS) {
+            Token op = current();
+            advance();
+            int right = parseTerm();
+            
+            if (op.type == TokenType.PLUS) {
+                result = result + right;
             } else {
-                System.out.println("Missing ';' after declaration");
-            }
-
-        } else {
-            System.out.println("Identifier expected after type");
-        }
-    }
-
-    // assignment → ID = expression ;
-    static void assignment() {
-
-        match("IDENTIFIER");
-        String varName = previous().value;
-
-        if (!SymbolTable.exists(varName)) {
-            System.out.println("Undeclared Variable -> " + varName);
-        }
-
-        String leftType = SymbolTable.getType(varName);
-
-        if (!match("ASSIGN")) {
-            System.out.println("Missing '=' in assignment");
-            return;
-        }
-
-        String rightType = expression();
-
-        if (leftType != null && rightType != null) {
-            if (leftType.equals("সংখ্যা") && rightType.equals("FLOAT")) {
-                System.out.println("Type Error: float assigned to int -> " + varName);
+                result = result - right;
             }
         }
-
-        if (!match("SEMICOLON")) {
-            System.out.println("Missing ';' after assignment");
-        } else {
-            System.out.println("Valid Assignment -> " + varName);
-        }
+        
+        return result;
     }
-
-    // expression → term ((+ | -) term)*
-    static String expression() {
-        String type = term();
-
-        while (match("PLUS") || match("MINUS")) {
-            String nextType = term();
-
-            if (type.equals("FLOAT") || nextType.equals("FLOAT")) {
-                type = "FLOAT";
+    
+    int parseTerm() {
+        int result = parseFactor();
+        
+        while (current().type == TokenType.MULTIPLY) {
+            advance();
+            int right = parseFactor();
+            result = result * right;
+        }
+        
+        return result;
+    }
+    
+    int parseFactor() {
+        Token token = current();
+        
+        if (token.type == TokenType.NUMBER) {
+            advance();
+            // Convert Bengali number to integer
+            String englishNum = "";
+            for (char c : token.value.toCharArray()) {
+                if (c == '০') englishNum += "0";
+                else if (c == '১') englishNum += "1";
+                else if (c == '২') englishNum += "2";
+                else if (c == '৩') englishNum += "3";
+                else if (c == '৪') englishNum += "4";
+                else if (c == '৫') englishNum += "5";
+                else if (c == '৬') englishNum += "6";
+                else if (c == '৭') englishNum += "7";
+                else if (c == '৮') englishNum += "8";
+                else if (c == '৯') englishNum += "9";
+            }
+            return Integer.parseInt(englishNum);
+        }
+        else if (token.type == TokenType.IDENTIFIER) {
+            advance();
+            String varName = token.value;
+            if (!variables.containsKey(varName)) {
+                return 0;
+            }
+            return variables.get(varName);
+        }
+        
+        return 0;
+    }
+    
+    String toBengaliNumber(int num) {
+        String englishNum = String.valueOf(num);
+        String result = "";
+        for (char c : englishNum.toCharArray()) {
+            if (c == '0') result += '০';
+            else if (c == '1') result += '১';
+            else if (c == '2') result += '২';
+            else if (c == '3') result += '৩';
+            else if (c == '4') result += '৪';
+            else if (c == '5') result += '৫';
+            else if (c == '6') result += '৬';
+            else if (c == '7') result += '৭';
+            else if (c == '8') result += '৮';
+            else if (c == '9') result += '৯';
+        }
+        return result;
+    }
+    
+    void parse() {
+        System.out.println("\nফলাফল:");
+        System.out.println("========");
+        
+        while (current().type != TokenType.EOF) {
+            parseStatement();
+        }
+        
+        System.out.println("\n✔ প্রোগ্রাম সঠিক!");
+    }
+    
+    void parseStatement() {
+        Token varToken = current();
+        if (varToken.type == TokenType.IDENTIFIER) {
+            String varName = varToken.value;
+            advance();
+            
+            if (current().type == TokenType.ASSIGN) {
+                advance();
+                int value = parseExpression();
+                
+                if (current().type == TokenType.SEMICOLON) {
+                    advance();
+                    variables.put(varName, value);
+                    String bengaliValue = toBengaliNumber(value);
+                    System.out.println(varName + " = " + bengaliValue);
+                }
             }
         }
-
-        return type;
-    }
-
-    // term → factor ((* | /) factor)*
-    static String term() {
-        String type = factor();
-
-        while (match("MULTIPLY") || match("DIVIDE")) {
-            String nextType = factor();
-
-            if (type.equals("FLOAT") || nextType.equals("FLOAT")) {
-                type = "FLOAT";
-            }
-        }
-
-        return type;
-    }
-
-    // factor → NUMBER | FLOAT | ID | (expression)
-    static String factor() {
-
-        if (match("NUMBER")) {
-            return "NUMBER";
-        }
-
-        if (match("FLOAT")) {
-            return "FLOAT";
-        }
-
-        if (match("IDENTIFIER")) {
-            String varName = previous().value;
-
-            if (!SymbolTable.exists(varName)) {
-                System.out.println("Undeclared Variable Used -> " + varName);
-                return "UNKNOWN";
-            }
-
-            String varType = SymbolTable.getType(varName);
-
-            if (varType.equals("দশমিক")) {
-                return "FLOAT";
-            }
-
-            return "NUMBER";
-        }
-
-        if (match("LEFT_PAREN")) {
-            String type = expression();
-
-            if (!match("RIGHT_PAREN")) {
-                System.out.println("Missing ')' after expression");
-            }
-
-            return type;
-        }
-
-        System.out.println("Invalid expression near -> " + peek().value);
-        return "UNKNOWN";
-    }
-
-    // helper methods
-
-    static boolean match(String type) {
-        if (check(type)) {
-            current++;
-            return true;
-        }
-        return false;
-    }
-
-    static boolean check(String type) {
-        if (isAtEnd()) return false;
-        return peek().type.equals(type);
-    }
-
-    static Token peek() {
-        return tokens.get(current);
-    }
-
-    static Token previous() {
-        return tokens.get(current - 1);
-    }
-
-    static boolean isAtEnd() {
-        return current >= tokens.size();
     }
 }
