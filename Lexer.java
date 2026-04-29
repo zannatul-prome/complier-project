@@ -58,7 +58,7 @@ public class Lexer {
                 continue;
             }
             
-            // Check for identifiers and keywords
+         
             if (isBengaliLetter(c)) {
                 String word = "";
                 while (pos < input.length() && (isBengaliLetter(input.charAt(pos)) || 
