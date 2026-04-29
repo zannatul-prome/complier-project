@@ -13,6 +13,7 @@ public class ASTNode {
     public ASTNode(String type, ASTNode left, ASTNode right) {
 
         this.type = type;
+        
         this.left = left;
         this.right = right;
     }
