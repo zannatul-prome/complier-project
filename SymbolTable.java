@@ -3,7 +3,7 @@ import java.util.*;
 public class SymbolTable {
 
     // Updated for compiler project
-    // Added small formatting change
+   
 
     private HashMap<String, Object> symbols = new HashMap<>();
     private HashMap<String, String> types = new HashMap<>();
@@ -12,7 +12,7 @@ public class SymbolTable {
         symbols.put(name, null);
         types.put(name, type);
     }
-
+    // Added small formatting change
     public void set(String name, Object value) {
 
         if (!symbols.containsKey(name)) {
