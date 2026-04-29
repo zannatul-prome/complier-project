@@ -224,7 +224,7 @@ public class Parser {
     void parseStatement() {
 
 
-        
+
         Token varToken = current();
 
         if (varToken.type == TokenType.IDENTIFIER) {
