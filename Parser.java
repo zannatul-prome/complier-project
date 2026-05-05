@@ -3,249 +3,111 @@ import java.util.*;
 public class Parser {
 
     List<Token> tokens;
-    int pos;
-    Map<String, Integer> variables;
+    int pos = 0;
+
+    Map<String, Integer> sym = new HashMap<>();
+    IntermediateCodeGenerator icg = new IntermediateCodeGenerator();
 
     Parser(List<Token> tokens) {
         this.tokens = tokens;
-        this.pos = 0;
-        this.variables = new HashMap<>();
     }
 
-    Token current() {
+    Token cur() {
         return tokens.get(pos);
     }
 
-    void advance() {
+    void next() {
         pos++;
     }
 
-    boolean parseCondition() {
+    int expr() {
+        int left = term();
 
-        int left = parseExpression();
-        boolean result = false;
-
-        if (current().type == TokenType.GT) {
-
-            advance();
-            int right = parseExpression();
-            result = (left > right);
-
-        } else if (current().type == TokenType.LT) {
-
-            advance();
-            int right = parseExpression();
-            result = (left < right);
-
-        } else if (current().type == TokenType.EQ) {
-
-            advance();
-            int right = parseExpression();
-            result = (left == right);
+        while (cur().type == TokenType.PLUS) {
+            next();
+            int right = term();
+            String t = icg.newTemp();
+            icg.binary(t, "" + left, "+", "" + right);
+            left = left + right;
         }
 
-        return result;
+        return left;
     }
 
-    int parseExpression() {
+    int term() {
+        int left = factor();
 
-        int result = parseTerm();
-
-        while (current().type == TokenType.PLUS ||
-               current().type == TokenType.MINUS) {
-
-            if (current().type == TokenType.PLUS) {
-
-                advance();
-                int right = parseTerm();
-                result = result + right;
-
-            } else if (current().type == TokenType.MINUS) {
-
-                advance();
-                int right = parseTerm();
-                result = result - right;
-            }
+        while (cur().type == TokenType.MULTIPLY) {
+            next();
+            int right = factor();
+            String t = icg.newTemp();
+            icg.binary(t, "" + left, "*", "" + right);
+            left = left * right;
         }
 
-        return result;
+        return left;
     }
 
-    int parseTerm() {
+    int factor() {
+        Token t = cur();
 
-        int result = parseFactor();
-
-        while (current().type == TokenType.MULTIPLY) {
-
-            advance();
-            int right = parseFactor();
-            result = result * right;
+        if (t.type == TokenType.NUMBER) {
+            next();
+            return Integer.parseInt(t.value);
         }
 
-        return result;
-    }
-
-    int parseFactor() {
-
-        Token token = current();
-
-        if (token.type == TokenType.NUMBER) {
-
-            advance();
-            return Integer.parseInt(token.value);
-
-        } else if (token.type == TokenType.IDENTIFIER) {
-
-            advance();
-            String varName = token.value;
-
-            if (!variables.containsKey(varName)) {
-                return 0;
-            }
-
-            return variables.get(varName);
-
-        } else if (token.type == TokenType.LEFT_PAREN) {
-
-            advance();
-            int result = parseExpression();
-
-            if (current().type == TokenType.RIGHT_PAREN) {
-                advance();
-            }
-
-            return result;
+        if (t.type == TokenType.IDENTIFIER) {
+            next();
+            return sym.getOrDefault(t.value, 0);
         }
 
         return 0;
     }
 
-    String toBengaliNumber(int num) {
+    void stmt() {
+        String var = cur().value;
+        next(); // id
+        next(); // =
 
-        String englishNum = String.valueOf(num);
-        String result = "";
+        int val = expr();
+        sym.put(var, val);
 
-        for (char c : englishNum.toCharArray()) {
+        if (cur().type == TokenType.SEMICOLON) next();
 
-            if (c == '0') result += '০';
-            else if (c == '1') result += '১';
-            else if (c == '2') result += '২';
-            else if (c == '3') result += '৩';
-            else if (c == '4') result += '৪';
-            else if (c == '5') result += '৫';
-            else if (c == '6') result += '৬';
-            else if (c == '7') result += '৭';
-            else if (c == '8') result += '৮';
-            else if (c == '9') result += '৯';
+        System.out.println(var + " = " + toBangla(val));
+        icg.assign(var, "" + val);
+    }
+
+    String toBangla(int n) {
+        String s = String.valueOf(n);
+        String r = "";
+
+        for (char c : s.toCharArray()) {
+            switch (c) {
+                case '0': r += "০"; break;
+                case '1': r += "১"; break;
+                case '2': r += "২"; break;
+                case '3': r += "৩"; break;
+                case '4': r += "৪"; break;
+                case '5': r += "৫"; break;
+                case '6': r += "৬"; break;
+                case '7': r += "৭"; break;
+                case '8': r += "৮"; break;
+                case '9': r += "৯"; break;
+            }
         }
-
-        return result;
+        return r;
     }
 
     void parse() {
-
-        System.out.println("\nফলাফল:");
-        System.out.println("========");
-
-        while (current().type != TokenType.EOF) {
-
-            if (current().type == TokenType.IF) {
-                parseIfElse();
+        while (cur().type != TokenType.EOF) {
+            if (cur().type == TokenType.IDENTIFIER) {
+                stmt();
             } else {
-                parseStatement();
+                next();
             }
         }
 
-        System.out.println("\n✔ প্রোগ্রাম সঠিক!");
-    }
-
-    void parseIfElse() {
-
-        advance(); // skip 'যদি'
-
-        if (current().type == TokenType.LEFT_PAREN) {
-
-            advance();
-            boolean condition = parseCondition();
-
-            if (current().type == TokenType.RIGHT_PAREN) {
-                advance();
-            }
-
-            if (current().type == TokenType.THEN) {
-                advance();
-            }
-
-            if (condition) {
-
-                System.out.println("শর্ত সত্য → IF ব্লক চলবে");
-
-                while (current().type != TokenType.ELSE &&
-                       current().type != TokenType.EOF) {
-
-                    if (current().type == TokenType.IDENTIFIER) {
-                        parseStatement();
-                    } else {
-                        break;
-                    }
-                }
-
-            } else {
-
-                System.out.println("শর্ত মিথ্যা → ELSE ব্লক চলবে");
-
-                while (current().type != TokenType.ELSE &&
-                       current().type != TokenType.EOF) {
-
-                    advance();
-                }
-
-                if (current().type == TokenType.ELSE) {
-
-                    advance();
-
-                    while (current().type != TokenType.EOF) {
-
-                        if (current().type == TokenType.IDENTIFIER) {
-                            parseStatement();
-                        } else {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        if (current().type == TokenType.SEMICOLON) {
-            advance();
-        }
-    }
-
-    void parseStatement() {
-
-
-        
-        Token varToken = current();
-
-        if (varToken.type == TokenType.IDENTIFIER) {
-
-            String varName = varToken.value;
-            advance();
-
-            if (current().type == TokenType.ASSIGN) {
-
-                advance();
-                int value = parseExpression();
-
-                if (current().type == TokenType.SEMICOLON) {
-
-                    advance();
-                    variables.put(varName, value);
-
-                    String bengaliValue = toBengaliNumber(value);
-                    System.out.println(varName + " = " + bengaliValue);
-                }
-            }
-        }
+        icg.print();
     }
 }
