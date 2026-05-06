@@ -2,133 +2,78 @@ import java.util.*;
 
 public class Lexer {
     String input;
-    int pos;
-    
+    int pos = 0;
+
     Lexer(String input) {
         this.input = input;
-        this.pos = 0;
     }
-    
-    boolean isBengaliDigit(char c) {
-        return c >= '০' && c <= '৯';
-    }
-    
-    boolean isBengaliLetter(char c) {
-        return (c >= 'অ' && c <= 'হ') || (c >= 'ক' && c <= 'ড়');
-    }
-    
-    String convertToEnglish(String bengaliNum) {
-        String result = "";
-        for (char c : bengaliNum.toCharArray()) {
-            if (c == '০') result += "0";
-            else if (c == '১') result += "1";
-            else if (c == '২') result += "2";
-            else if (c == '৩') result += "3";
-            else if (c == '৪') result += "4";
-            else if (c == '৫') result += "5";
-            else if (c == '৬') result += "6";
-            else if (c == '৭') result += "7";
-            else if (c == '৮') result += "8";
-            else if (c == '৯') result += "9";
-            else result += c;
-        }
-        return result;
-    }
-    
+
     List<Token> tokenize() {
         List<Token> tokens = new ArrayList<>();
-        
+
         while (pos < input.length()) {
+
             char c = input.charAt(pos);
-            
-            if (c == ' ' || c == '\n' || c == '\t') {
+
+            if (Character.isWhitespace(c)) {
                 pos++;
                 continue;
             }
-            
-            // Check for numbers
-            if (isBengaliDigit(c)) {
+
+            // number (Bangla + English)
+            if (Character.isDigit(c) || (c >= '০' && c <= '৯')) {
                 String num = "";
-                while (pos < input.length() && isBengaliDigit(input.charAt(pos))) {
-                    num += input.charAt(pos);
-                    pos++;
+                while (pos < input.length() &&
+                        (Character.isDigit(input.charAt(pos)) ||
+                         (input.charAt(pos) >= '০' && input.charAt(pos) <= '৯'))) {
+                    num += input.charAt(pos++);
                 }
-                String engNum = convertToEnglish(num);
-                tokens.add(new Token(TokenType.NUMBER, engNum));
+                tokens.add(new Token(TokenType.NUMBER, num));
                 continue;
             }
-            
-         
-            if (isBengaliLetter(c)) {
-                String word = "";
-                while (pos < input.length() && (isBengaliLetter(input.charAt(pos)) || 
-                       isBengaliDigit(input.charAt(pos)))) {
-                    word += input.charAt(pos);
-                    pos++;
-                }
-                
-                if (word.equals("যদি")) {
-                    tokens.add(new Token(TokenType.IF, word));
-                }
-                else if (word.equals("নাহলে")) {
-                    tokens.add(new Token(TokenType.ELSE, word));
-                }
-                else if (word.equals("তাহলে")) {
-                    tokens.add(new Token(TokenType.THEN, word));
-                }
-                else {
-                    tokens.add(new Token(TokenType.IDENTIFIER, word));
-                }
+
+            if (input.startsWith("যদি", pos)) {
+                tokens.add(new Token(TokenType.IF, "যদি"));
+                pos += 3;
                 continue;
             }
-            
-            // Check for operators
-            if (c == '=') {
-                if (pos + 1 < input.length() && input.charAt(pos + 1) == '=') {
-                    tokens.add(new Token(TokenType.EQ, "=="));
-                    pos += 2;
-                } else {
-                    tokens.add(new Token(TokenType.ASSIGN, "="));
-                    pos++;
+
+            if (input.startsWith("নাহলে", pos)) {
+                tokens.add(new Token(TokenType.ELSE, "নাহলে"));
+                pos += 5;
+                continue;
+            }
+
+            if (input.startsWith("তাহলে", pos)) {
+                tokens.add(new Token(TokenType.THEN, "তাহলে"));
+                pos += 5;
+                continue;
+            }
+
+            if (Character.isLetter(c) || (c >= 'ক' && c <= 'হ')) {
+                String id = "";
+                while (pos < input.length() &&
+                        (Character.isLetterOrDigit(input.charAt(pos)) ||
+                         (input.charAt(pos) >= 'ক' && input.charAt(pos) <= 'হ'))) {
+                    id += input.charAt(pos++);
                 }
+                tokens.add(new Token(TokenType.IDENTIFIER, id));
+                continue;
             }
-            else if (c == '+') {
-                tokens.add(new Token(TokenType.PLUS, "+"));
-                pos++;
+
+            switch (c) {
+                case '=': tokens.add(new Token(TokenType.ASSIGN, "=")); break;
+                case '+': tokens.add(new Token(TokenType.PLUS, "+")); break;
+                case '*': tokens.add(new Token(TokenType.MULTIPLY, "*")); break;
+                case '>': tokens.add(new Token(TokenType.GT, ">")); break;
+                case '(': tokens.add(new Token(TokenType.LEFT_PAREN, "(")); break;
+                case ')': tokens.add(new Token(TokenType.RIGHT_PAREN, ")")); break;
+                case ';': tokens.add(new Token(TokenType.SEMICOLON, ";")); break;
             }
-            else if (c == '-') {
-                tokens.add(new Token(TokenType.MINUS, "-"));
-                pos++;
-            }
-            else if (c == '*') {
-                tokens.add(new Token(TokenType.MULTIPLY, "*"));
-                pos++;
-            }
-            else if (c == '>') {
-                tokens.add(new Token(TokenType.GT, ">"));
-                pos++;
-            }
-            else if (c == '<') {
-                tokens.add(new Token(TokenType.LT, "<"));
-                pos++;
-            }
-            else if (c == '(') {
-                tokens.add(new Token(TokenType.LEFT_PAREN, "("));
-                pos++;
-            }
-            else if (c == ')') {
-                tokens.add(new Token(TokenType.RIGHT_PAREN, ")"));
-                pos++;
-            }
-            else if (c == ';') {
-                tokens.add(new Token(TokenType.SEMICOLON, ";"));
-                pos++;
-            }
-            else {
-                pos++;
-            }
+
+            pos++;
         }
-        
+
         tokens.add(new Token(TokenType.EOF, ""));
         return tokens;
     }
