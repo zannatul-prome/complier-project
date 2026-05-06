@@ -12,40 +12,20 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    Token cur() {
-        return tokens.get(pos);
-    }
+    Token cur() { return tokens.get(pos); }
+    void next() { pos++; }
 
-    void next() {
-        pos++;
-    }
-
-    int expr() {
-        int left = term();
-
-        while (cur().type == TokenType.PLUS) {
-            next();
-            int right = term();
-            String t = icg.newTemp();
-            icg.binary(t, "" + left, "+", "" + right);
-            left = left + right;
-        }
-
-        return left;
-    }
-
-    int term() {
-        int left = factor();
-
-        while (cur().type == TokenType.MULTIPLY) {
-            next();
-            int right = factor();
-            String t = icg.newTemp();
-            icg.binary(t, "" + left, "*", "" + right);
-            left = left * right;
-        }
-
-        return left;
+    int toInt(String s) {
+        return Integer.parseInt(s.replace('০','0')
+                                 .replace('১','1')
+                                 .replace('২','2')
+                                 .replace('৩','3')
+                                 .replace('৪','4')
+                                 .replace('৫','5')
+                                 .replace('৬','6')
+                                 .replace('৭','7')
+                                 .replace('৮','8')
+                                 .replace('৯','9'));
     }
 
     int factor() {
@@ -53,7 +33,7 @@ public class Parser {
 
         if (t.type == TokenType.NUMBER) {
             next();
-            return Integer.parseInt(t.value);
+            return toInt(t.value);
         }
 
         if (t.type == TokenType.IDENTIFIER) {
@@ -64,49 +44,85 @@ public class Parser {
         return 0;
     }
 
+    int term() {
+        int left = factor();
+
+        while (cur().type == TokenType.MULTIPLY) {
+            next();
+            int right = factor();
+
+            String t = icg.newTemp();
+            icg.binary(t, "" + left, "*", "" + right);
+
+            left = left * right;
+        }
+
+        return left;
+    }
+
+    int expr() {
+        int left = term();
+
+        while (cur().type == TokenType.PLUS) {
+            next();
+            int right = term();
+
+            String t = icg.newTemp();
+            icg.binary(t, "" + left, "+", "" + right);
+
+            left = left + right;
+        }
+
+        return left;
+    }
+
     void stmt() {
         String var = cur().value;
-        next(); // id
-        next(); // =
+        next(); next();
 
         int val = expr();
         sym.put(var, val);
 
         if (cur().type == TokenType.SEMICOLON) next();
 
-        System.out.println(var + " = " + toBangla(val));
+        System.out.println(var + " = " + val);
         icg.assign(var, "" + val);
     }
 
-    String toBangla(int n) {
-        String s = String.valueOf(n);
-        String r = "";
-
-        for (char c : s.toCharArray()) {
-            switch (c) {
-                case '0': r += "০"; break;
-                case '1': r += "১"; break;
-                case '2': r += "২"; break;
-                case '3': r += "৩"; break;
-                case '4': r += "৪"; break;
-                case '5': r += "৫"; break;
-                case '6': r += "৬"; break;
-                case '7': r += "৭"; break;
-                case '8': r += "৮"; break;
-                case '9': r += "৯"; break;
-            }
-        }
-        return r;
-    }
-
     void parse() {
-        while (cur().type != TokenType.EOF) {
-            if (cur().type == TokenType.IDENTIFIER) {
-                stmt();
-            } else {
-                next();
-            }
+
+        // ক = 10
+        stmt();
+
+        // IF
+        next(); // যদি
+
+        next(); // (
+        int left = expr();
+
+        next(); // >
+        int right = expr();
+
+        String t = icg.newTemp();
+        icg.binary(t, "" + left, ">", "" + right);
+
+        boolean result = left > right;
+
+        next(); // )
+        next(); // তাহলে
+
+        if (result) {
+            stmt(); // IF
+            while (cur().type != TokenType.ELSE) next();
+            next(); // skip else
+        } else {
+            while (cur().type != TokenType.ELSE) next();
+            next();
+            stmt(); // ELSE
         }
+
+        // গ = খ * 2
+        stmt();
 
         icg.print();
     }

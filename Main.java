@@ -4,23 +4,27 @@ public class Main {
     public static void main(String[] args) {
 
         String code =
-                "ক = ১০;\n" +
-                "খ = ২০;\n" +
-                "গ = ক + খ;\n" +
+                "ক = ০;\n" +
                 "যদি (ক > ৫) তাহলে\n" +
-                "ঘ = ১০০;\n" +
-                "$invalid = ৫০;\n" +
-                "ঙ = ঘ + ২০;\n" +
+                "খ = ১০০;\n" +
                 "নাহলে\n" +
-                "ঘ = ৫০;\n" +
-                "চ = গ * ২;\n";
+                "খ = ৫০;\n" +
+                "গ = খ * ২;\n";
 
-        Lexer lx = new Lexer(code);
-        List<Token> tokens = lx.tokenize();
+        System.out.println("========== SIMPLE IF-ELSE ==========");
 
-        lx.showErrors();
+        Lexer lexer = new Lexer(code);
+        List<Token> tokens = lexer.tokenize();
 
-        Parser p = new Parser(tokens);
-        p.parse();
+        System.out.println("\nটোকেন:");
+        for (Token t : tokens) {
+            t.printBangla();
+        }
+
+        System.out.println("\nফলাফল:");
+        System.out.println("========");
+
+        Parser parser = new Parser(tokens);
+        parser.parse();
     }
 }

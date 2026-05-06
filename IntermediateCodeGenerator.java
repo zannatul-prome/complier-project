@@ -16,10 +16,6 @@ public class IntermediateCodeGenerator {
         code.add(r + " = " + a + " " + op + " " + b);
     }
 
-    void label(String l) {
-        code.add(l + ":");
-    }
-
     void print() {
         System.out.println("\nINTERMEDIATE CODE:");
         System.out.println("==================");
