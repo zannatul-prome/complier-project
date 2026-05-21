@@ -1,6 +1,7 @@
 import java.util.*;
 
 public class IntermediateCodeGenerator {
+
     List<String> code = new ArrayList<>();
     int t = 1;
 
@@ -17,8 +18,10 @@ public class IntermediateCodeGenerator {
     }
 
     void print() {
+
         System.out.println("\nINTERMEDIATE CODE:");
         System.out.println("==================");
+
         for (String c : code) {
             System.out.println(c);
         }
