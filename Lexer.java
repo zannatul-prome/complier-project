@@ -1,3 +1,4 @@
+
 import java.util.*;
 
 public class Lexer {
@@ -9,6 +10,7 @@ public class Lexer {
     }
 
     List<Token> tokenize() {
+
         List<Token> tokens = new ArrayList<>();
 
         while (pos < input.length()) {
@@ -20,14 +22,16 @@ public class Lexer {
                 continue;
             }
 
-            // number (Bangla + English)
             if (Character.isDigit(c) || (c >= '০' && c <= '৯')) {
+
                 String num = "";
+
                 while (pos < input.length() &&
                         (Character.isDigit(input.charAt(pos)) ||
-                         (input.charAt(pos) >= '০' && input.charAt(pos) <= '৯'))) {
+                                (input.charAt(pos) >= '০' && input.charAt(pos) <= '৯'))) {
                     num += input.charAt(pos++);
                 }
+
                 tokens.add(new Token(TokenType.NUMBER, num));
                 continue;
             }
@@ -51,21 +55,36 @@ public class Lexer {
             }
 
             if (Character.isLetter(c) || (c >= 'ক' && c <= 'হ')) {
+
                 String id = "";
+
                 while (pos < input.length() &&
                         (Character.isLetterOrDigit(input.charAt(pos)) ||
-                         (input.charAt(pos) >= 'ক' && input.charAt(pos) <= 'হ'))) {
+                                (input.charAt(pos) >= 'ক' && input.charAt(pos) <= 'হ'))) {
                     id += input.charAt(pos++);
                 }
+
                 tokens.add(new Token(TokenType.IDENTIFIER, id));
                 continue;
             }
 
+            if (c == '=') {
+                if (pos + 1 < input.length() && input.charAt(pos + 1) == '=') {
+                    tokens.add(new Token(TokenType.EQ, "=="));
+                    pos += 2;
+                } else {
+                    tokens.add(new Token(TokenType.ASSIGN, "="));
+                    pos++;
+                }
+                continue;
+            }
+
             switch (c) {
-                case '=': tokens.add(new Token(TokenType.ASSIGN, "=")); break;
                 case '+': tokens.add(new Token(TokenType.PLUS, "+")); break;
+                case '-': tokens.add(new Token(TokenType.MINUS, "-")); break;
                 case '*': tokens.add(new Token(TokenType.MULTIPLY, "*")); break;
                 case '>': tokens.add(new Token(TokenType.GT, ">")); break;
+                case '<': tokens.add(new Token(TokenType.LT, "<")); break;
                 case '(': tokens.add(new Token(TokenType.LEFT_PAREN, "(")); break;
                 case ')': tokens.add(new Token(TokenType.RIGHT_PAREN, ")")); break;
                 case ';': tokens.add(new Token(TokenType.SEMICOLON, ";")); break;

@@ -13,5 +13,6 @@ public enum TokenType {
     IF,
     ELSE,
     THEN,
+    EQ,
     EOF
 }

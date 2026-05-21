@@ -21,11 +21,20 @@ public class Token {
         else if (type == TokenType.PLUS)
             System.out.println("যোগ চিহ্ন: +");
 
+        else if (type == TokenType.MINUS)
+            System.out.println("বিয়োগ চিহ্ন: -");
+
         else if (type == TokenType.MULTIPLY)
             System.out.println("গুণ চিহ্ন: *");
 
         else if (type == TokenType.GT)
             System.out.println("বড় চিহ্ন: >");
+
+        else if (type == TokenType.LT)
+            System.out.println("ছোট চিহ্ন: <");
+
+        else if (type == TokenType.EQ)
+            System.out.println("সমান চিহ্ন: ==");
 
         else if (type == TokenType.LEFT_PAREN)
             System.out.println("বাম বন্ধনী: (");
