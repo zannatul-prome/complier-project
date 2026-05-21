@@ -28,7 +28,7 @@ public class Main {
         
         System.out.println("========== প্রোগ্রাম ১ (শর্ত সত্য) ==========");
         System.out.println(code1);
-        System.out.println("==================");
+      
         
         Lexer lexer1 = new Lexer(code1);
         List<Token> tokens1 = lexer1.tokenize();
@@ -43,7 +43,7 @@ public class Main {
         
         System.out.println("\n\n========== প্রোগ্রাম ২ (শর্ত মিথ্যা) ==========");
         System.out.println(code2);
-        System.out.println("==================");
+        
         
         Lexer lexer2 = new Lexer(code2);
         List<Token> tokens2 = lexer2.tokenize();
@@ -58,7 +58,7 @@ public class Main {
         
         System.out.println("\n\n========== প্রোগ্রাম ৩ (সমান শর্ত) ==========");
         System.out.println(code3);
-        System.out.println("==================");
+      
         
         Lexer lexer3 = new Lexer(code3);
         List<Token> tokens3 = lexer3.tokenize();
